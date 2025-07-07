@@ -42,6 +42,18 @@ OPERATIONS = [
             {"name": "strength", "type": float, "prompt": "strength (0.0-2.0, default 1.0)", "default": 1.0},
             {"name": "kernel_size", "type": int, "prompt": "kernel size (odd, 3-15, default 5)", "default": 5}
         ]
+    },
+    {
+        "name": "edge_count",
+        "params": []
+    },
+    {
+        "name": "object_count",
+        "params": []
+    },
+    {
+        "name": "color_distribution",
+        "params": []
     }
 ]
 
@@ -98,44 +110,12 @@ def main():
     print("welcome to the sea vision pipeline builder!")
     operations = []
 
-    # --- AUTO-FILL EXAMPLE INPUTS ---
-    auto_inputs = iter([
-        '1',        # select brightness
-        '1.5',     # brightness factor
-        '2',       # select blur
-        '7',       # kernel size
-        '2.0',     # sigma
-        '0',       # done
-        '0',       # roi x
-        '0',       # roi y
-        '0',       # roi width
-        '0',       # roi height
-        'data/input.jpg',  # input image path
-        'data/output.jpg'  # output image path
-    ])
-    def auto_input(prompt):
-        try:
-            value = next(auto_inputs)
-            print(f"{prompt}{value}")
-            return value
-        except StopIteration:
-            return input(prompt)
-
-    # Replace input() with auto_input() below for auto-filling
     while True:
-        op_num = int(auto_input("select operation number: "))
+        op_num = prompt_for_operation()
         if op_num == 0:
             break
         op = OPERATIONS[op_num - 1]
-        params = {}
-        for param in op["params"]:
-            val = auto_input(f"  {param['prompt']}: ")
-            if val == '' and param["default"] is not None:
-                params[param["name"]] = param["default"]
-            elif val == '' and param["default"] is None:
-                continue
-            else:
-                params[param["name"]] = param["type"](val)
+        params = prompt_for_params(op)
         operations.append({
             "type": op["name"],
             "parameters": params
@@ -145,17 +125,11 @@ def main():
         return
     
     # get roi input
-    print("\nenter roi (region of interest) parameters:")
-    print("(enter 0 for width/height to process full image)")
-    x = int(auto_input("  x coordinate (default 0): ") or "0")
-    y = int(auto_input("  y coordinate (default 0): ") or "0")
-    width = int(auto_input("  width (0 for full image): ") or "0")
-    height = int(auto_input("  height (0 for full image): ") or "0")
-    roi = {"x": x, "y": y, "width": width, "height": height}
+    roi = prompt_for_roi()
     
-    input_image = auto_input("enter input image path: ")
-    output_image = auto_input("enter output image path: ")
-    pipeline = {
+    input_image = input("enter input image path: ")
+    output_image = input("enter output image path: ")
+    pipeline ={
         "roi": roi,
         "operations": operations,
         "input_image": input_image,
