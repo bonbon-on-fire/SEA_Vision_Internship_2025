@@ -48,11 +48,7 @@ OPERATIONS = [
         "params": []
     },
     {
-        "name": "object_count",
-        "params": []
-    },
-    {
-        "name": "color_distribution",
+        "name": "blur_detection",
         "params": []
     }
 ]

@@ -6,7 +6,9 @@ const std::map<std::string, OperationFactory::OperationCreator> OperationFactory
     {"blur", &OperationFactory::createBlur},
     {"crop", &OperationFactory::createCrop},
     {"sharpen", &OperationFactory::createSharpen},
-    {"contrast", &OperationFactory::createContrast}
+    {"contrast", &OperationFactory::createContrast},
+    {"edge_count", &OperationFactory::createEdgeCount},
+    {"blur_detection", &OperationFactory::createBlurDetection}
 };
 
 std::unique_ptr<Operation> OperationFactory::createOperation(const std::string& type) {
@@ -35,4 +37,12 @@ std::unique_ptr<Operation> OperationFactory::createSharpen() {
 
 std::unique_ptr<Operation> OperationFactory::createContrast() {
     return std::make_unique<ContrastOperation>();
+}
+
+std::unique_ptr<Operation> OperationFactory::createEdgeCount() {
+    return std::make_unique<EdgeCountOperation>();
+}
+
+std::unique_ptr<Operation> OperationFactory::createBlurDetection() {
+    return std::make_unique<BlurDetectionOperation>();
 }

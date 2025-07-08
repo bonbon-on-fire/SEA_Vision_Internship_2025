@@ -21,4 +21,6 @@ private:
     static std::unique_ptr<Operation> createCrop();
     static std::unique_ptr<Operation> createSharpen();
     static std::unique_ptr<Operation> createContrast();
+    static std::unique_ptr<Operation> createEdgeCount();
+    static std::unique_ptr<Operation> createBlurDetection();
 }; 

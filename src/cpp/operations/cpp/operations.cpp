@@ -354,145 +354,54 @@ bool EdgeCountOperation::validateParametersImpl(const std::map<std::string, doub
     return true;
 }
 
-cv::Mat ObjectCountOperation::executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) {
+cv::Mat BlurDetectionOperation::executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) {
     // extract ROI from input image
     cv::Mat roi_image = ROITools::extractROI(input, roi);
-    
-    // convert to grayscale
+
+    // convert to grayscale if needed
     cv::Mat gray;
     if (roi_image.channels() == 3) {
         cv::cvtColor(roi_image, gray, cv::COLOR_BGR2GRAY);
     } else {
         gray = roi_image.clone();
     }
-    
-    // apply threshold to create binary image
-    cv::Mat binary;
-    cv::threshold(gray, binary, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
-    
-    // find contours
-    std::vector<std::vector<cv::Point>> contours;
-    std::vector<cv::Vec4i> hierarchy;
-    cv::findContours(binary, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    
-    // filter contours by area (remove very small noise)
-    int min_area = 50; // minimum area in pixels
-    std::vector<std::vector<cv::Point>> filtered_contours;
-    std::vector<double> areas;
-    
-    for (const auto& contour : contours) {
-        double area = cv::contourArea(contour);
-        if (area >= min_area) {
-            filtered_contours.push_back(contour);
-            areas.push_back(area);
-        }
+
+    // compute Laplacian
+    cv::Mat laplacian;
+    cv::Laplacian(gray, laplacian, CV_64F);
+
+    // calculate variance of Laplacian
+    cv::Scalar mean, stddev;
+    cv::meanStdDev(laplacian, mean, stddev);
+    double variance = stddev[0] * stddev[0];
+
+    // qualitative label
+    std::string blur_label;
+    if (variance < 20.0) {
+        blur_label = "Blurry";
+    } else if (variance < 100.0) {
+        blur_label = "Slightly blurry";
+    } else {
+        blur_label = "Sharp";
     }
-    
-    // calculate statistics
-    int object_count = static_cast<int>(filtered_contours.size());
-    double total_area = 0;
-    double avg_area = 0;
-    double max_area = 0;
-    double min_area_found = std::numeric_limits<double>::max();
-    
-    if (!areas.empty()) {
-        total_area = std::accumulate(areas.begin(), areas.end(), 0.0);
-        avg_area = total_area / areas.size();
-        max_area = *std::max_element(areas.begin(), areas.end());
-        min_area_found = *std::min_element(areas.begin(), areas.end());
-    }
-    
+
     // print analysis results
-    std::cout << "=== OBJECT COUNT ANALYSIS ===" << std::endl;
-    std::cout << "Total objects detected: " << object_count << std::endl;
-    std::cout << "Total object area: " << std::fixed << std::setprecision(1) << total_area << " pixels" << std::endl;
-    std::cout << "Average object area: " << std::fixed << std::setprecision(1) << avg_area << " pixels" << std::endl;
-    std::cout << "Largest object area: " << std::fixed << std::setprecision(1) << max_area << " pixels" << std::endl;
-    std::cout << "Smallest object area: " << std::fixed << std::setprecision(1) << min_area_found << " pixels" << std::endl;
-    std::cout << "=============================" << std::endl;
-    
+    std::cout << "=== BLUR DETECTION ANALYSIS ===" << std::endl;
+    std::cout << "Variance of Laplacian: " << std::fixed << std::setprecision(2) << variance << std::endl;
+    std::cout << "Assessment: " << blur_label << std::endl;
+    std::cout << "===============================" << std::endl;
+
     // return the original image unchanged
     return input.clone();
 }
 
-std::string ObjectCountOperation::getNameImpl() const {
-    return "object_count";
+std::string BlurDetectionOperation::getNameImpl() const {
+    return "blur_detection";
 }
 
-bool ObjectCountOperation::validateParametersImpl(const std::map<std::string, double>& parameters) const {
-    // no parameters to validate for object count operation
+bool BlurDetectionOperation::validateParametersImpl(const std::map<std::string, double>& parameters) const {
+    // no parameters to validate for blur detection operation
     return true;
 }
 
-cv::Mat ColorDistributionOperation::executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) {
-    // extract ROI from input image
-    cv::Mat roi_image = ROITools::extractROI(input, roi);
-    
-    // convert to different color spaces
-    cv::Mat hsv, lab;
-    cv::cvtColor(roi_image, hsv, cv::COLOR_BGR2HSV);
-    cv::cvtColor(roi_image, lab, cv::COLOR_BGR2Lab);
-    
-    // calculate color statistics
-    cv::Scalar mean_bgr = cv::mean(roi_image);
-    cv::Scalar mean_hsv = cv::mean(hsv);
-    cv::Scalar mean_lab = cv::mean(lab);
-    
-    // calculate standard deviation
-    cv::Mat mean, stddev;
-    cv::meanStdDev(roi_image, mean, stddev);
-    
-    // find dominant colors using k-means clustering
-    cv::Mat data = roi_image.reshape(1, roi_image.total());
-    data.convertTo(data, CV_32F);
-    
-    cv::Mat labels, centers;
-    int k = 5; // number of dominant colors
-    cv::kmeans(data, k, labels, cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 1.0), 3, cv::KMEANS_PP_CENTERS, centers);
-    
-    // count pixels for each dominant color
-    std::vector<int> color_counts(k, 0);
-    for (int i = 0; i < labels.rows; i++) {
-        int cluster_id = labels.at<int>(i);
-        color_counts[cluster_id]++;
-    }
-    
-    // print analysis results
-    std::cout << "=== COLOR DISTRIBUTION ANALYSIS ===" << std::endl;
-    std::cout << "BGR Color Statistics:" << std::endl;
-    std::cout << "  Blue  - Mean: " << std::fixed << std::setprecision(1) << mean_bgr[0] 
-              << ", StdDev: " << std::fixed << std::setprecision(1) << stddev.at<double>(0) << std::endl;
-    std::cout << "  Green - Mean: " << std::fixed << std::setprecision(1) << mean_bgr[1] 
-              << ", StdDev: " << std::fixed << std::setprecision(1) << stddev.at<double>(1) << std::endl;
-    std::cout << "  Red   - Mean: " << std::fixed << std::setprecision(1) << mean_bgr[2] 
-              << ", StdDev: " << std::fixed << std::setprecision(1) << stddev.at<double>(2) << std::endl;
-    
-    std::cout << "HSV Color Statistics:" << std::endl;
-    std::cout << "  Hue: " << std::fixed << std::setprecision(1) << mean_hsv[0] 
-              << ", Saturation: " << std::fixed << std::setprecision(3) << (mean_hsv[1] / 255.0) 
-              << ", Value: " << std::fixed << std::setprecision(3) << (mean_hsv[2] / 255.0) << std::endl;
-    
-    std::cout << "Dominant Colors (BGR):" << std::endl;
-    int total_pixels = roi_image.total();
-    for (int i = 0; i < k; i++) {
-        cv::Vec3f color = centers.at<cv::Vec3f>(i);
-        double percentage = (static_cast<double>(color_counts[i]) / total_pixels) * 100.0;
-        std::cout << "  Color " << (i + 1) << ": B=" << std::fixed << std::setprecision(0) << color[0] 
-                  << " G=" << std::fixed << std::setprecision(0) << color[1] 
-                  << " R=" << std::fixed << std::setprecision(0) << color[2] 
-                  << " (" << std::fixed << std::setprecision(1) << percentage << "%)" << std::endl;
-    }
-    std::cout << "===================================" << std::endl;
-    
-    // return the original image unchanged
-    return input.clone();
-}
-
-std::string ColorDistributionOperation::getNameImpl() const {
-    return "color_distribution";
-}
-
-bool ColorDistributionOperation::validateParametersImpl(const std::map<std::string, double>& parameters) const {
-    // no parameters to validate for color distribution operation
-    return true;
-} 
+ 

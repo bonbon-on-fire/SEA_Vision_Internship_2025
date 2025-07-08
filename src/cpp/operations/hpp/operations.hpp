@@ -50,18 +50,12 @@ private:
     bool validateParametersImpl(const std::map<std::string, double>& parameters) const override;
 };
 
-// object count analysis operation (no parameters)
-class ObjectCountOperation : public Operation {
+// blur detection analysis operation (no parameters)
+class BlurDetectionOperation : public Operation {
 private:
     cv::Mat executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) override;
     std::string getNameImpl() const override;
     bool validateParametersImpl(const std::map<std::string, double>& parameters) const override;
 };
 
-// color distribution analysis operation (no parameters)
-class ColorDistributionOperation : public Operation {
-private:
-    cv::Mat executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) override;
-    std::string getNameImpl() const override;
-    bool validateParametersImpl(const std::map<std::string, double>& parameters) const override;
-}; 
+ 

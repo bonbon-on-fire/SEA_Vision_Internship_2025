@@ -7,19 +7,14 @@
   },
   "operations": [
     {
-      "type": "brightness",
-      "parameters": {
-        "factor": 1.5
-      }
+      "type": "edge_count",
+      "parameters": {}
     },
     {
-      "type": "blur",
-      "parameters": {
-        "kernel_size": 7,
-        "sigma": 2.0
-      }
+      "type": "blur_detection",
+      "parameters": {}
     }
   ],
-  "input_image": "data/input.jpg",
+  "input_image": "data/output_step9_sharpen_cli.jpg",
   "output_image": "data/output.jpg"
 }
