@@ -38,10 +38,12 @@ public:
                            const std::map<std::string, double>& parameters) = 0;
     
     const NodeId& getId() const { return id_; }
+    const std::string& getName() const { return id_; } // name is same as id for now
     const std::string& getType() const { return type_; }
     const InputList& getInputNodeIds() const { return input_node_ids_; }
     const OutputList& getOutputNodeIds() const { return output_node_ids_; }
     const ROI& getROI() const { return roi_; }
+    const std::map<std::string, double>& getParameters() const { return parameters_; }
     bool isExecuted() const { return executed_; }
     const cv::Mat& getResult() const { return result_; }
     
@@ -49,6 +51,7 @@ public:
     void setOutputNodeIds(const OutputList& outputs) { output_node_ids_ = outputs; }
     void setROI(const ROI& roi) { roi_ = roi; }
     void setParameters(const std::map<std::string, double>& params) { parameters_ = params; }
+    void setParameter(const std::string& key, double value) { parameters_[key] = value; }
     void setExecuted(bool executed) { executed_ = executed; }
     void setResult(const cv::Mat& result) { result_ = result; }
     

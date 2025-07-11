@@ -7,6 +7,8 @@
 #include "graph/hpp/graph.hpp"
 #include <nlohmann/json.hpp>
 
+// connection structure is defined in graph.hpp
+
 /**
  * structure to hold operation configuration from JSON
  */
@@ -31,6 +33,7 @@ struct PipelineConfig {
  */
 struct NodeConfig {
     std::string id;
+    std::string name;
     std::string type;
     std::map<std::string, double> parameters;
     std::vector<std::string> inputs;
@@ -43,6 +46,7 @@ struct NodeConfig {
  */
 struct GraphConfig {
     std::vector<NodeConfig> nodes;
+    std::vector<Connection> connections;
     std::string input_node_id;
     std::string output_node_id;
     std::string input_image;
@@ -57,6 +61,9 @@ public:
     
     // read graph configuration from json file
     static GraphConfig readGraph(const std::string& filename);
+    
+    // read graph configuration from json file (alias for readGraph)
+    static GraphConfig readGraphConfig(const std::string& filename);
     
     // convert linear pipeline to graph format
     static GraphConfig convertPipelineToGraph(const PipelineConfig& pipeline);

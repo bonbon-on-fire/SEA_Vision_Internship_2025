@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <queue>
 #include <unordered_set>
+#include <iostream>
 
 // constructor
 Graph::Graph() {}
@@ -251,9 +252,85 @@ void Graph::updateExecutionLevels() {
     execution_levels_ = topologicalSort();
 }
 
+// add connection with ports
+void Graph::addConnection(const NodeId& from_node, int from_port, 
+                         const NodeId& to_node, int to_port) {
+    connections_.emplace_back(from_node, from_port, to_node, to_port);
+    
+    // also update node connections for backward compatibility
+    GraphNode* from_node_ptr = getNode(from_node);
+    GraphNode* to_node_ptr = getNode(to_node);
+    
+    if (from_node_ptr && to_node_ptr) {
+        from_node_ptr->addOutput(to_node);
+        to_node_ptr->addInput(from_node);
+    }
+    
+    // update execution levels after adding connection
+    updateExecutionLevels();
+}
+
+// get all nodes (returns raw pointers to avoid unique_ptr copying issues)
+std::vector<const GraphNode*> Graph::getAllNodes() const {
+    std::vector<const GraphNode*> nodes;
+    nodes.reserve(nodes_.size());
+    for (const auto& pair : nodes_) {
+        nodes.push_back(pair.second.get());
+    }
+    return nodes;
+}
+
+// get nodes by type
+std::vector<NodeId> Graph::getNodesByType(const std::string& type) const {
+    std::vector<NodeId> node_ids;
+    for (const auto& pair : nodes_) {
+        if (pair.second->getType() == type) {
+            node_ids.push_back(pair.first);
+        }
+    }
+    return node_ids;
+}
+
+// get incoming connections for a node
+std::vector<Connection> Graph::getIncomingConnections(const NodeId& node_id) const {
+    std::vector<Connection> incoming;
+    for (const auto& conn : connections_) {
+        if (conn.to_node == node_id) {
+            incoming.push_back(conn);
+        }
+    }
+    return incoming;
+}
+
+// get outgoing connections for a node
+std::vector<Connection> Graph::getOutgoingConnections(const NodeId& node_id) const {
+    std::vector<Connection> outgoing;
+    for (const auto& conn : connections_) {
+        if (conn.from_node == node_id) {
+            outgoing.push_back(conn);
+        }
+    }
+    return outgoing;
+}
+
+// get topological order for execution
+std::vector<NodeId> Graph::getTopologicalOrder() const {
+    std::vector<NodeId> order;
+    auto levels = topologicalSort();
+    
+    for (const auto& level : levels) {
+        for (const auto& node_id : level) {
+            order.push_back(node_id);
+        }
+    }
+    
+    return order;
+}
+
 // clear all nodes
 void Graph::clear() {
     nodes_.clear();
+    connections_.clear();
     input_node_id_.clear();
     output_node_id_.clear();
     execution_levels_.clear();

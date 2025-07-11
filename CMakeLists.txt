@@ -19,6 +19,10 @@ add_executable(sea_vision
     src/cpp/operations/cpp/operations.cpp
     src/cpp/bindings/cpp/pipeline_reader.cpp
     src/cpp/bindings/cpp/operation_factory.cpp
+    src/cpp/graph/cpp/graph_node.cpp
+    src/cpp/graph/cpp/graph.cpp
+    src/cpp/graph/cpp/graph_node_factory.cpp
+    src/cpp/graph/cpp/graph_executor.cpp
 )
 
 # link libraries

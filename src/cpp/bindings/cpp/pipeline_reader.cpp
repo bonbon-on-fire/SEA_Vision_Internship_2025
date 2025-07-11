@@ -45,6 +45,10 @@ GraphConfig PipelineReader::readGraph(const std::string& filename) {
     return readGraphFromJson(j);
 }
 
+GraphConfig PipelineReader::readGraphConfig(const std::string& filename) {
+    return readGraph(filename);
+}
+
 GraphConfig PipelineReader::readGraphFromJson(const json& j) {
     GraphConfig config;
     
@@ -64,6 +68,31 @@ GraphConfig PipelineReader::readGraphFromJson(const json& j) {
     
     if (j.contains("output_node_id")) {
         config.output_node_id = j["output_node_id"];
+    }
+    
+    // parse connections array
+    if (j.contains("connections") && j["connections"].is_array()) {
+        for (const auto& conn_json : j["connections"]) {
+            Connection conn;
+            
+            if (conn_json.contains("from_node") && conn_json["from_node"].is_string()) {
+                conn.from_node = conn_json["from_node"];
+            }
+            
+            if (conn_json.contains("from_port") && conn_json["from_port"].is_number()) {
+                conn.from_port = conn_json["from_port"].get<int>();
+            }
+            
+            if (conn_json.contains("to_node") && conn_json["to_node"].is_string()) {
+                conn.to_node = conn_json["to_node"];
+            }
+            
+            if (conn_json.contains("to_port") && conn_json["to_port"].is_number()) {
+                conn.to_port = conn_json["to_port"].get<int>();
+            }
+            
+            config.connections.push_back(conn);
+        }
     }
     
     // parse input/output image paths
@@ -200,6 +229,13 @@ NodeConfig PipelineReader::parseNode(const json& node_json) {
     }
     node.id = node_json["id"];
     
+    // parse node name (optional, defaults to id)
+    if (node_json.contains("name") && node_json["name"].is_string()) {
+        node.name = node_json["name"];
+    } else {
+        node.name = node.id; // default name to id if not provided
+    }
+    
     // parse node type
     if (!node_json.contains("type") || !node_json["type"].is_string()) {
         throw std::runtime_error("node must have 'type' field");
@@ -232,11 +268,8 @@ NodeConfig PipelineReader::parseNode(const json& node_json) {
     }
     
     // parse image_path (for input/output nodes)
-    if (node_json.contains("data") && node_json["data"].is_object()) {
-        const auto& data = node_json["data"];
-        if (data.contains("image_path") && data["image_path"].is_string()) {
-            node.image_path = data["image_path"];
-        }
+    if (node_json.contains("image_path") && node_json["image_path"].is_string()) {
+        node.image_path = node_json["image_path"];
     }
     
     return node;

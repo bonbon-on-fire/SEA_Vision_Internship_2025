@@ -1,0 +1,81 @@
+{
+  "format": "graph",
+  "nodes": [
+    {
+      "id": "input1",
+      "name": "Input Image",
+      "type": "input",
+      "image_path": "data/input.jpg",
+      "parameters": {},
+      "roi": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "full_image": true
+      }
+    },
+    {
+      "id": "copy1",
+      "name": "Copy Operation",
+      "type": "copy",
+      "parameters": {},
+      "roi": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "full_image": true
+      }
+    },
+    {
+      "id": "brightness1",
+      "name": "Brightness Adjustment",
+      "type": "brightness",
+      "parameters": {
+        "alpha": 1.2,
+        "beta": 10
+      },
+      "roi": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "full_image": true
+      }
+    },
+    {
+      "id": "output1",
+      "name": "Output Image",
+      "type": "output",
+      "parameters": {},
+      "roi": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "full_image": true
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from_node": "input1",
+      "from_port": 0,
+      "to_node": "copy1",
+      "to_port": 0
+    },
+    {
+      "from_node": "copy1",
+      "from_port": 0,
+      "to_node": "brightness1",
+      "to_port": 0
+    },
+    {
+      "from_node": "brightness1",
+      "from_port": 0,
+      "to_node": "output1",
+      "to_port": 0
+    }
+  ]
+} 
