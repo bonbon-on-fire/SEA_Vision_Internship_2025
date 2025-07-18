@@ -76,9 +76,6 @@ The modular nature of the system opens the door to exciting extensions:
 - ML-based sequence generation based on historical defect data
 - Real-time video stream processing
 - Automatic ROI detection
-- Performance dashboards
-- AR tools for real-time defect overlays
-- Blockchain-based quality audit logs
 
 In the long term, this architecture could support adaptive pipelines that learn from results, combine data from multiple sensors, and even incorporate edge computing or quantum acceleration.
 
