@@ -56,8 +56,7 @@ For more advanced workflows, the graph-based model allows operations that don't 
 ![Input Image](data/input.jpg)
 
 **Output Image:**  
-![Test Image](data/input.jpg)
-![Output Image](data/output_blur_bright_blurdetect.jpg)
+![Output Image](data/output_step4_combined.jpg)
 
 ### 2. JSON Pipeline Configuration
 
