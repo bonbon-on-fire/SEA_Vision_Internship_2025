@@ -48,6 +48,141 @@ The Python interface does more than just set parameters. It can analyze input im
 
 For more advanced workflows, the graph-based model allows operations that don't depend on each other to run in parallel. This significantly reduces total processing time, especially when multiple image features need to be checked independently.
 
+## Code in Action: Linear Workflow Example
+
+### 1. Sample Input
+
+**Input image:** `data/input.jpg`
+**Output image:** `data/output_step4_combined.jpg`
+
+### 2. JSON Pipeline Configuration
+
+```json
+{
+  "roi": {"x": 0, "y": 0, "width": 0, "height": 0},
+  "operations": [
+    {"type": "blur", "parameters": {"kernel_size": 5, "sigma": 1.0}},
+    {"type": "brightness", "parameters": {"factor": 1.2}},
+    {"type": "blur_detection", "parameters": {}}
+  ],
+  "input_image": "data/input.jpg",
+  "output_image": "data/output_blur_bright_blurdetect.jpg"
+}
+```
+
+### 3. Python CLI Interaction
+
+```
+Welcome to the SEA Vision pipeline builder!
+Available operations:
+  1. brightness
+  2. blur
+  3. contrast
+  4. crop
+  5. sharpen
+  6. edge_count
+  7. blur_detection
+  0. done (finish pipeline)
+
+Select operation number: 2
+  kernel size (odd, 3-31, default 5): 5
+  sigma (0.1-10.0, default 1.0): 1.0
+Select operation number: 1
+  brightness factor (0.0-5.0, default 1.0): 1.2
+Select operation number: 7
+Select operation number: 0
+
+enter roi (region of interest) parameters:
+(enter 0 for width/height to process full image)
+  x coordinate (default 0): 0
+  y coordinate (default 0): 0
+  width (0 for full image): 0
+  height (0 for full image): 0
+enter input image path: data/input.jpg
+enter output image path: data/output_blur_bright_blurdetect.jpg
+pipeline json written to pipeline_cli.json
+running: build/Release/sea_vision.exe pipeline_cli.json data/input.jpg data/output_blur_bright_blurdetect.jpg
+```
+
+### 4. C++ Execution Output
+
+```
+sea_vision.exe started
+starting sea vision json-driven pipeline...
+pipeline config: pipeline_cli.json
+input image: data/input.jpg
+output image: data/output_blur_bright_blurdetect.jpg
+execution mode: linear
+
+executing linear pipeline...
+reading pipeline configuration...
+loading input image...
+successfully loaded image with size: 800x600
+executing pipeline with 3 operations...
+
+  step 1: blur
+operation 1 completed successfully!!
+
+  step 2: brightness
+operation 2 completed successfully!!
+
+  step 3: blur_detection
+blur score: 0.42 (image considered sharp)
+operation 3 completed successfully!!
+
+pipeline completed successfully!!
+output saved to: data/output_blur_bright_blurdetect.jpg
+```
+
+## How the Workflow Runs
+
+**1. Loading the Pipeline Configuration**
+
+The system loads the pipeline configuration from a JSON file, which defines the sequence of operations and their parameters:
+```cpp
+PipelineConfig config = PipelineReader::readPipeline("pipeline_cli.json");
+```
+
+**2. Creating Operations Dynamically (Factory Pattern)**
+
+For each operation in the pipeline, the factory creates the correct operation object based on the type specified in the JSON:
+```cpp
+for (const auto& op_config : config.operations) {
+    auto operation = OperationFactory::createOperation(op_config.type);
+    // ...
+}
+```
+
+**3. Executing Each Operation**
+
+Each operation is executed in sequence, modifying the image as it passes through the pipeline:
+```cpp
+cv::Mat result = image.clone();
+for (const auto& op_config : config.operations) {
+    result = operation->execute(result, roi_to_use, op_config.parameters);
+}
+```
+
+**4. Saving the Output**
+
+After all operations are complete, the final image is saved:
+```cpp
+cv::imwrite(output_image, result);
+```
+
+**5. Example: Implementing a Blur Operation**
+
+Here’s a simplified version of how a blur operation might be implemented:
+```cpp
+cv::Mat BlurOperation::executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) {
+    int kernel_size = static_cast<int>(parameters.at("kernel_size"));
+    double sigma = parameters.at("sigma");
+    cv::Mat output;
+    cv::GaussianBlur(input, output, cv::Size(kernel_size, kernel_size), sigma);
+    return output;
+}
+```
+
 ## Current Status
 
 By the end of the internship, the system supported:
