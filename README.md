@@ -2,6 +2,55 @@
 
 ## Project Overview
 
+---
+
+## Quick Start
+
+### Prerequisites
+- **CMake**: Version 3.15 or higher
+- **C++ Compiler**: Supports C++17
+- **Python**: 3.7 or higher
+- **Conan**: For dependency management ([Install guide](https://conan.io/downloads.html))
+- **OpenCV**: Pre-built binaries required (see below)
+- **Windows**: (Recommended, as CLI and build paths are Windows-centric)
+
+### 1. Clone the Repository
+```powershell
+git clone https://github.com/yourusername/sea_vision_project.git
+cd sea_vision_project
+```
+
+### 2. Install Prerequisites
+- [Install CMake](https://cmake.org/download/)
+- [Install Python 3.7+](https://www.python.org/downloads/)
+- [Install Conan](https://conan.io/downloads.html) (`pip install conan`)
+- Install a C++17 compiler (e.g., Visual Studio 2019 or later)
+- Download and build OpenCV, or use the provided binaries (see `opencv/README.md.txt` for details)
+
+### 3. Install Dependencies with Conan
+```powershell
+conan install . --output-folder=build --build=missing
+```
+
+### 4. Build the Project
+```powershell
+cmake -S . -B build
+cmake --build build --config Release
+```
+
+### 5. Run the Python CLI
+```powershell
+python src/python/main_cli.py
+```
+- The CLI will guide you to build a pipeline and generate a JSON config.
+- It will then call the C++ executable automatically.
+
+### OpenCV Note
+- The project expects OpenCV binaries in `opencv/build`.
+- If you use a custom OpenCV build, update the path in `CMakeLists.txt` and `src/python/main_cli.py` as needed.
+
+---
+
 ### What I Built
 
 During my internship at SEA Vision, I designed and prototyped a hybrid computer vision system to improve quality control on pharmaceutical manufacturing lines. The goal was to speed up and automate defect detection, ensuring faster and more accurate identification of faulty products. I created a flexible, Python-driven interface for defining image processing workflows and a high-performance C++ backend that executes them in real-time.
