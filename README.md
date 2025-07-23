@@ -1,7 +1,5 @@
 # SEA Vision Internship 2025
 
----
-
 ## Quick Start
 
 ### Prerequisites
