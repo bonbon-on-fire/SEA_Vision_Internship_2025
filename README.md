@@ -1,9 +1,5 @@
 # SEA Vision Internship 2025
 
-## Project Overview
-
----
-
 ## Quick Start
 
 ### Prerequisites
@@ -49,7 +45,7 @@ python src/python/main_cli.py
 - The project expects OpenCV binaries in `opencv/build`.
 - If you use a custom OpenCV build, update the path in `CMakeLists.txt` and `src/python/main_cli.py` as needed.
 
----
+## Project Overview
 
 ### What I Built
 
