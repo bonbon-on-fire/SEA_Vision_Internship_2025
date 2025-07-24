@@ -3,6 +3,7 @@
 ## Quick Start
 
 ### Prerequisites
+
 - **CMake**: Version 3.15 or higher
 - **C++ Compiler**: Supports C++17
 - **Python**: 3.7 or higher
@@ -11,12 +12,14 @@
 - **Windows**: (Recommended, as CLI and build paths are Windows-centric)
 
 ### 1. Clone the Repository
+
 ```powershell
 git clone https://github.com/yourusername/sea_vision_project.git
 cd sea_vision_project
 ```
 
 ### 2. Install Prerequisites
+
 - [Install CMake](https://cmake.org/download/)
 - [Install Python 3.7+](https://www.python.org/downloads/)
 - [Install Conan](https://conan.io/downloads.html) (`pip install conan`)
@@ -24,24 +27,29 @@ cd sea_vision_project
 - Download and build OpenCV, or use the provided binaries (see `opencv/README.md.txt` for details)
 
 ### 3. Install Dependencies with Conan
+
 ```powershell
 conan install . --output-folder=build --build=missing
 ```
 
 ### 4. Build the Project
+
 ```powershell
 cmake -S . -B build
 cmake --build build --config Release
 ```
 
 ### 5. Run the Python CLI
+
 ```powershell
 python src/python/main_cli.py
 ```
+
 - The CLI will guide you to build a pipeline and generate a JSON config.
 - It will then call the C++ executable automatically.
 
 ### OpenCV Note
+
 - The project expects OpenCV binaries in `opencv/build`.
 - If you use a custom OpenCV build, update the path in `CMakeLists.txt` and `src/python/main_cli.py` as needed.
 
@@ -59,11 +67,11 @@ Two execution models were built:
 
 **Graph-Based Pipeline**: A parallelizable, dependency-aware model that supports more complex quality control workflows with optimized runtime performance.
 
-The system can intelligently adjust the image processing strategy depending on input characteristics like orientation, lighting, or product type—all determined ahead of time using Python. Once a pipeline is configured, it can be executed over and over in C++ with minimal latency.
+The system can intelligently adjust the image processing strategy depending on input characteristics (like orientation, lighting, or product type) all determined ahead of time using Python. Once a pipeline is configured, it can be executed over and over in C++ with minimal latency.
 
 ### Why It Matters
 
-Before this system, SEA Vision's engineers had to manually configure image operations for each product and use case, which was repetitive and inefficient. My project explored whether a hybrid Python/C++ setup could provide the same high-speed processing while enabling more intelligent, automated configuration. It succeeded in doing both.
+Before this system, SEA Vision's engineers had to manually configure image operations for each product and use case, which was repetitive and inefficient. My project explored whether a hybrid Python/C++ setup could provide the same high-speed processing while enabling more intelligent, automated and parametric configuration. It succeeded in doing both.
 
 ## Technical Overview
 
@@ -120,7 +128,7 @@ For more advanced workflows, the graph-based model allows operations that don't 
 
 ### 3. Python CLI Interaction
 
-```
+```plaintext
 Welcome to the SEA Vision pipeline builder!
 Available operations:
   1. brightness
@@ -154,7 +162,7 @@ running: build/Release/sea_vision.exe pipeline_cli.json data/input.jpg data/outp
 
 ### 4. C++ Execution Output
 
-```
+```plaintext
 sea_vision.exe started
 starting sea vision json-driven pipeline...
 pipeline config: pipeline_cli.json
@@ -184,16 +192,18 @@ output saved to: data/output_blur_bright_blurdetect.jpg
 
 ## How the Workflow Runs
 
-**1. Loading the Pipeline Configuration**
+1. **Loading the Pipeline Configuration**
 
 The system loads the pipeline configuration from a JSON file, which defines the sequence of operations and their parameters:
+
 ```cpp
 PipelineConfig config = PipelineReader::readPipeline("pipeline_cli.json");
 ```
 
-**2. Creating Operations Dynamically (Factory Pattern)**
+1. **Creating Operations Dynamically (Factory Pattern)**
 
 For each operation in the pipeline, the factory creates the correct operation object based on the type specified in the JSON:
+
 ```cpp
 for (const auto& op_config : config.operations) {
     auto operation = OperationFactory::createOperation(op_config.type);
@@ -201,9 +211,10 @@ for (const auto& op_config : config.operations) {
 }
 ```
 
-**3. Executing Each Operation**
+1. **Executing Each Operation**
 
 Each operation is executed in sequence, modifying the image as it passes through the pipeline:
+
 ```cpp
 cv::Mat result = image.clone();
 for (const auto& op_config : config.operations) {
@@ -211,16 +222,17 @@ for (const auto& op_config : config.operations) {
 }
 ```
 
-**4. Saving the Output**
+1. **Saving the Output**
 
 After all operations are complete, the final image is saved:
 ```cpp
 cv::imwrite(output_image, result);
 ```
 
-**5. Example: Implementing a Blur Operation**
+1. **Example: Implementing a Blur Operation**
 
-Here’s a simplified version of how a blur operation might be implemented:
+Here's a simplified version of how a blur operation might be implemented:
+
 ```cpp
 cv::Mat BlurOperation::executeImpl(const cv::Mat& input, const ROI& roi, const std::map<std::string, double>& parameters) {
     int kernel_size = static_cast<int>(parameters.at("kernel_size"));
@@ -237,7 +249,7 @@ This section explains where to find key components, how files are organized, and
 
 ### Directory Overview
 
-```
+```bash
 sea_vision_project/
 │
 ├── src/
@@ -275,7 +287,9 @@ sea_vision_project/
   - **Header:** `src/cpp/operations/hpp/<operation>.hpp`
 
 - **Format:**  
+  
 Each operation is a class inheriting from a base `Operation` class, e.g.:
+
 ```cpp
 // src/cpp/operations/hpp/blur.hpp
 class BlurOperation : public Operation {
@@ -302,7 +316,9 @@ cv::Mat BlurOperation::executeImpl(const cv::Mat& input, const ROI& roi, const s
   - **Header:** `src/cpp/operations/hpp/OperationFactory.hpp`
 
 - **Format:**  
-The factory maps operation type strings to classes:
+
+The `OperationFactory` maps operation type strings to classes:
+
 ```cpp
 // src/cpp/operations/cpp/OperationFactory.cpp
 std::unique_ptr<Operation> OperationFactory::createOperation(const std::string& type) {
@@ -320,6 +336,7 @@ std::unique_ptr<Operation> OperationFactory::createOperation(const std::string& 
   - **Test Configs:** `tests/json/`
 
 - **Format:**  
+
 ```json
 {
   "roi": {"x": 0, "y": 0, "width": 0, "height": 0},
@@ -338,11 +355,12 @@ std::unique_ptr<Operation> OperationFactory::createOperation(const std::string& 
   - **Script:** `src/python/main_cli.py`
 
 - **Format:**  
-- Presents a menu of available operations (edit this to add new ones).
-- Prompts for parameters, validates them, and writes the JSON config.
-- Calls the C++ backend with the generated config and image paths.
+  - Presents a menu of available operations (edit this to add new ones).
+  - Prompts for parameters, validates them, and writes the JSON config.
+  - Calls the C++ backend with the generated config and image paths.
 
 Example menu code:
+
 ```python
 operations = [
     {"name": "brightness", "params": [...]},
@@ -423,7 +441,7 @@ operations = [
 By the end of the internship, the system supported:
 
 - Hybrid architecture with clear separation of compile-time and runtime
-- 7 core operations optimized for pharmaceutical scenarios
+- 7 core operations available
 - Fully working Python CLI for interactive pipeline design
 - JSON-based config system
 - Graph-based execution model with dependency resolution
